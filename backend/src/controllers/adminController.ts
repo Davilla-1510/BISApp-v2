@@ -7,6 +7,7 @@ import Lesson from '../models/Lesson';
 import Level from '../models/Level';
 import Module from '../models/Module';
 import Quiz from '../models/Quiz';
+import User from '../models/User';
 
 
 // ========== MODULES ==========
@@ -306,7 +307,6 @@ export const deleteQuiz = async (req: Request, res: Response): Promise<void> => 
 // ========== STATISTICS ==========
 export const getAdminStats = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const User = require('../models/User').default;
     const totalUsers = await User.countDocuments();
     const totalModules = await Module.countDocuments();
     const totalChapters = await Chapter.countDocuments();

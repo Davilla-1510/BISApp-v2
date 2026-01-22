@@ -2,26 +2,14 @@ import mongoose from 'mongoose';
 
 const connectDB = async (): Promise<void> => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/bisapp';
-
-    // Options recommandées pour éviter les avertissements de dépréciation
-    const options = {
-      autoIndex: true, // Aide à construire les index (utile pour les recherches de quiz)
-    };
-
-    const conn = await mongoose.connect(mongoUri, options);
-
-    console.log(`✅ MongoDB Connecté : ${conn.connection.host}`);
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/bisapp';
+    console.log('🔎 Using MongoDB URI:', mongoUri.startsWith('mongodb+srv:') ? 'atlas cluster' : mongoUri);
+    await mongoose.connect(mongoUri);
+    console.log('✅ MongoDB connecté avec succès');
   } catch (error: any) {
-    console.error(`❌ Erreur de connexion : ${error.message}`);
-    // On attend un peu avant de quitter pour laisser le temps aux logs de s'afficher
+    console.error('❌ Erreur de connexion à MongoDB:', error && error.message ? error.message : error);
     process.exit(1);
   }
 };
-
-// Gestion des événements de connexion
-mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB déconnecté. Tentative de reconnexion...');
-});
 
 export default connectDB;

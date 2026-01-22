@@ -1,11 +1,11 @@
 import express, { Router } from 'express';
 import {
-    getChaptersByLevel,
-    getExercisesByLesson,
-    getLessonsByChapter,
-    getLevelsByModule,
-    getModules,
-    getQuizByLevel
+  getChaptersByLevel,
+  getExercisesByLesson,
+  getLessonsByChapter,
+  getLevelsByModule,
+  getModules,
+  getQuizByLevel
 } from '../controllers/contentController';
 import { authenticate } from '../middleware/auth';
 
