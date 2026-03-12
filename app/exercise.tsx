@@ -5,7 +5,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { api } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -20,20 +20,36 @@ import {
     Platform
 } from 'react-native';
 
+interface ExerciseOption {
+    text: string;
+    isCorrect: boolean;
+    _id?: string;
+}
+
 interface Exercise {
     _id: string;
     type: 'text' | 'multiple-choice' | 'braille-conversion' | 'matching';
     question: string;
     content: string;
-    options?: string[];
+    options?: ExerciseOption[];
     correctAnswer: string | string[];
     maxAttempts: number;
     order: number;
 }
 
+interface ExerciseResult {
+    exerciseId: string;
+    correct: boolean;
+    attempts: number;
+}
+
 export default function ExerciseScreen() {
     const router = useRouter();
-    const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
+    const params = useLocalSearchParams<{ lessonId: string; lessonTitle: string; chapterId?: string }>();
+    
+    const lessonId = params.lessonId || (params as any).lessonId;
+    const lessonTitle = params.lessonTitle || (params as any).lessonTitle || 'Exercice';
+    const chapterId = params.chapterId || (params as any).chapterId;
     
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [loading, setLoading] = useState(true);
@@ -46,26 +62,80 @@ export default function ExerciseScreen() {
     const [showResult, setShowResult] = useState(false);
     const [resultMessage, setResultMessage] = useState('');
     const [resultSuccess, setResultSuccess] = useState(false);
+    
+    // Score tracking
+    const [exerciseResults, setExerciseResults] = useState<ExerciseResult[]>([]);
+    const [showLessonSummary, setShowLessonSummary] = useState(false);
+    const [nextLessonId, setNextLessonId] = useState<string | null>(null);
+    // Add a key to force re-render
+    const [exerciseKey, setExerciseKey] = useState(0);
 
     const tintColor = useThemeColor({}, 'tint');
 
-    useEffect(() => {
-        fetchExercises();
-    }, [lessonId]);
-
-    const fetchExercises = async () => {
+    const fetchExercises = useCallback(async () => {
         try {
             setLoading(true);
+            if (!lessonId) {
+                console.warn('Lesson ID missing');
+                setExercises([]);
+                return;
+            }
+            
+            console.log('Fetching exercises for lessonId:', lessonId);
+            
             const response = await api.getExercisesByLesson(lessonId);
-            setExercises(response || []);
-        } catch (error) {
-            Alert.alert('Erreur', 'Impossible de charger les exercices');
+            console.log('Exercises API Response:', response);
+            
+            // L'API retourne { exercises: [...] } - extraire correctement
+            let exercisesData: Exercise[] = [];
+            if (response && response.exercises) {
+                exercisesData = response.exercises;
+            } else if (response && Array.isArray(response)) {
+                exercisesData = response;
+            } else if (response && response.data && response.data.exercises) {
+                exercisesData = response.data.exercises;
+            }
+            
+            console.log('Exercises found:', exercisesData.length);
+            
+            // Trier par ordre
+            const sortedExercises = exercisesData.sort((a: Exercise, b: Exercise) => a.order - b.order);
+            setExercises(sortedExercises);
+            
+            // Reset results
+            setExerciseResults([]);
+            setShowLessonSummary(false);
+            setCurrentExerciseIndex(0);
+            setAttempts(0);
+            setUserAnswer('');
+            setSelectedOptions([]);
+            setExerciseKey(0);
+        } catch (error: any) {
+            const errorMsg = error.response?.data?.message || 'Impossible de charger les exercices';
+            Alert.alert('Erreur', errorMsg);
+            console.error('Fetch exercises error:', error);
+            setExercises([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, [lessonId]);
+
+    useEffect(() => {
+        fetchExercises();
+    }, [fetchExercises]);
 
     const currentExercise = exercises[currentExerciseIndex];
+
+    const calculateScore = () => {
+        const totalAttempts = exerciseResults.reduce((sum, r) => sum + r.attempts, 0);
+        const correctAnswers = exerciseResults.filter(r => r.correct).length;
+        return {
+            correct: correctAnswers,
+            total: exercises.length,
+            attempts: totalAttempts,
+            percentage: Math.round((correctAnswers / exercises.length) * 100)
+        };
+    };
 
     const handleSubmitAnswer = async () => {
         if (isSubmitting || !currentExercise) return;
@@ -82,16 +152,33 @@ export default function ExerciseScreen() {
 
         try {
             setIsSubmitting(true);
-            const checkCorrect = (uAns: string, cAns: string | string[]) => {
-                if (Array.isArray(cAns)) {
-                    return cAns.some(a => a.toLowerCase() === uAns.toLowerCase());
-                }
-                return uAns.toLowerCase() === cAns.toLowerCase();
-            };
+            
+            // For multiple-choice, check using the isCorrect property in options
+            let isCorrect = false;
+            if (currentExercise.type === 'multiple-choice') {
+                const selectedOption = currentExercise.options?.find(opt => opt.text === finalAnswer);
+                isCorrect = selectedOption?.isCorrect || false;
+            } else {
+                // For text/braille-conversion, check against correctAnswer
+                const checkCorrect = (uAns: string, cAns: string | string[]) => {
+                    if (Array.isArray(cAns)) {
+                        return cAns.some(a => a.toLowerCase() === uAns.toLowerCase());
+                    }
+                    return uAns.toLowerCase() === cAns.toLowerCase();
+                };
+                isCorrect = checkCorrect(finalAnswer, currentExercise.correctAnswer);
+            }
 
-            const isCorrect = checkCorrect(finalAnswer, currentExercise.correctAnswer);
             const newAttempts = attempts + 1;
             setAttempts(newAttempts);
+
+            // Save result for score calculation
+            const result: ExerciseResult = {
+                exerciseId: currentExercise._id,
+                correct: isCorrect,
+                attempts: newAttempts
+            };
+            setExerciseResults(prev => [...prev, result]);
 
             await api.submitExerciseAnswer({
                 exerciseId: currentExercise._id,
@@ -132,19 +219,126 @@ export default function ExerciseScreen() {
     };
 
     const handleNext = () => {
+        // First hide the result modal
         setShowResult(false);
-        if (currentExerciseIndex < exercises.length - 1) {
-            setCurrentExerciseIndex(prev => prev + 1);
-            setUserAnswer('');
-            setSelectedOptions([]);
-            setAttempts(0);
+        
+        // Small delay to allow the modal to close before changing the exercise
+        setTimeout(() => {
+            // Check if there are more exercises
+            if (currentExerciseIndex < exercises.length - 1) {
+                // Move to next exercise and reset all states
+                const nextIndex = currentExerciseIndex + 1;
+                setCurrentExerciseIndex(nextIndex);
+                setUserAnswer('');
+                setSelectedOptions([]);
+                setAttempts(0);
+                // Force re-render to ensure options display properly
+                setExerciseKey(prev => prev + 1);
+                
+                // Log for debugging
+                console.log('Moving to exercise:', nextIndex + 1, 'Type:', exercises[nextIndex]?.type);
+            } else {
+                // All exercises completed - show summary
+                const score = calculateScore();
+                console.log('Lesson completed! Score:', score);
+                setShowLessonSummary(true);
+            }
+        }, 100);
+    };
+
+    const handleContinueToNextLesson = async () => {
+        // Mark current lesson as completed
+        try {
+            await api.updateLessonProgress(lessonId, {
+                completed: true,
+                score: calculateScore().percentage
+            });
+        } catch (error) {
+            console.error('Error updating lesson progress:', error);
+        }
+        
+        // Try to navigate to next lesson
+        if (nextLessonId) {
+            router.replace({
+                pathname: '/exercise',
+                params: {
+                    lessonId: nextLessonId,
+                    chapterId: chapterId
+                }
+            });
         } else {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-            Alert.alert('Félicitations !', 'Leçon terminée.', [{ text: 'OK', onPress: () => router.back() }]);
+            // No more lessons - go back to lessons list
+            router.back();
         }
     };
 
+    const handleRetryLesson = () => {
+        setShowLessonSummary(false);
+        setExerciseResults([]);
+        setCurrentExerciseIndex(0);
+        setAttempts(0);
+        setUserAnswer('');
+        setSelectedOptions([]);
+        setExerciseKey(0);
+    };
+
     if (loading) return <ThemedView style={styles.center}><ActivityIndicator size="large" color={tintColor} /></ThemedView>;
+
+    // Afficher un message si aucun exercice
+    if (exercises.length === 0) {
+        return (
+            <ThemedView style={styles.center}>
+                <Text style={styles.emptyText}>Aucun exercice disponible pour cette leçon.</Text>
+                <Text style={styles.debugText}>Lesson ID: {lessonId}</Text>
+                <TouchableOpacity onPress={fetchExercises} style={styles.retryButton}>
+                    <Text style={{color: tintColor}}>Réessayer</Text>
+                </TouchableOpacity>
+            </ThemedView>
+        );
+    }
+
+    // Show lesson summary when all exercises are done
+    if (showLessonSummary) {
+        const score = calculateScore();
+        return (
+            <ThemedView style={styles.container}>
+                <View style={styles.summaryContainer}>
+                    <Text style={styles.summaryTitle}>🎉 Leçon terminée !</Text>
+                    
+                    <View style={styles.scoreCard}>
+                        <Text style={styles.scoreLabel}>Votre score</Text>
+                        <Text style={[styles.scoreValue, { color: tintColor }]}>{score.percentage}%</Text>
+                        <Text style={styles.scoreDetail}>
+                            {score.correct} réponses correctes sur {score.total} exercices
+                        </Text>
+                        <Text style={styles.scoreAttempts}>
+                            Total des tentatives: {score.attempts}
+                        </Text>
+                    </View>
+
+                    <View style={styles.summaryButtons}>
+                        <TouchableOpacity 
+                            style={[styles.summaryButton, { backgroundColor: tintColor }]}
+                            onPress={handleContinueToNextLesson}
+                        >
+                            <Text style={styles.summaryButtonText}>
+                                {nextLessonId ? 'Leçon suivante →' : 'Retour aux leçons'}
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                            style={[styles.summaryButton, styles.retryButtonStyle]}
+                            onPress={handleRetryLesson}
+                        >
+                            <Text style={[styles.summaryButtonText, { color: '#666' }]}>
+                                Réessayer la leçon
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </ThemedView>
+        );
+    }
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -159,19 +353,20 @@ export default function ExerciseScreen() {
                             backgroundColor: tintColor 
                         }]} />
                     </View>
+                    <Text style={styles.progressText}>
+                        {currentExerciseIndex + 1}/{exercises.length}
+                    </Text>
                 </View>
 
-                <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+                <ScrollView key={exerciseKey} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
                     <ThemedText style={styles.typeLabel}>{currentExercise?.type.toUpperCase()}</ThemedText>
                     <ThemedText type="subtitle" style={styles.questionText}>{currentExercise?.question}</ThemedText>
                     
                     <View style={styles.contentCard}>
                         <Text style={styles.mainDisplay}>{currentExercise?.content}</Text>
                         
-                        {/* ✅ CORRECTION ICI : Pas de parenthèses vides */}
                         {currentExercise?.type === 'braille-conversion' && (
                             <View style={styles.brailleHelpContainer}>
-                                
                                 <Text style={styles.hintText}>Points : 1-2-3 (gauche), 4-5-6 (droite)</Text>
                             </View>
                         )}
@@ -185,14 +380,14 @@ export default function ExerciseScreen() {
                                         key={i}
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                            setSelectedOptions([opt]);
+                                            setSelectedOptions([opt.text]);
                                         }}
                                         style={[
                                             styles.optionBtn, 
-                                            selectedOptions.includes(opt) && { borderColor: tintColor, backgroundColor: tintColor + '10' }
+                                            selectedOptions.includes(opt.text) && { borderColor: tintColor, backgroundColor: tintColor + '10' }
                                         ]}
                                     >
-                                        <Text style={[styles.optionText, selectedOptions.includes(opt) && { color: tintColor }]}>{opt}</Text>
+                                        <Text style={[styles.optionText, selectedOptions.includes(opt.text) && { color: tintColor }]}>{opt.text}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -235,11 +430,15 @@ export default function ExerciseScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+    emptyText: { color: '#999', fontSize: 16, textAlign: 'center' },
+    debugText: { color: '#ccc', fontSize: 12, marginTop: 10 },
+    retryButton: { marginTop: 15, padding: 10 },
     header: { paddingTop: 60, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', gap: 15 },
     closeButton: { padding: 5 },
     progressTrack: { flex: 1, height: 8, backgroundColor: '#eee', borderRadius: 4, overflow: 'hidden' },
     progressFill: { height: '100%' },
+    progressText: { fontSize: 14, color: '#666', fontWeight: '600', minWidth: 40, textAlign: 'right' },
     scrollContent: { padding: 20 },
     typeLabel: { color: '#888', fontSize: 11, fontWeight: 'bold', letterSpacing: 1, marginBottom: 5 },
     questionText: { fontSize: 20, marginBottom: 20 },
@@ -253,8 +452,6 @@ const styles = StyleSheet.create({
         borderColor: '#eee'
     },
     mainDisplay: { fontSize: 50, fontWeight: 'bold', color: '#333' },
-    
-    // ✅ CORRECTION DES STYLES ICI
     brailleHelpContainer: {
         marginTop: 15,
         padding: 10,
@@ -271,7 +468,6 @@ const styles = StyleSheet.create({
         marginTop: 5,
         textAlign: 'center'
     },
-
     inputArea: { marginBottom: 20 },
     textInput: { borderBottomWidth: 2, borderColor: '#ddd', fontSize: 22, padding: 15, textAlign: 'center' },
     optionsGrid: { gap: 10 },
@@ -290,5 +486,66 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     resultIcon: { fontSize: 20, fontWeight: 'bold', marginBottom: 5 },
-    resultMsg: { fontSize: 15, textAlign: 'center', color: '#666' }
+    resultMsg: { fontSize: 15, textAlign: 'center', color: '#666' },
+    
+    // Summary styles
+    summaryContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 30,
+    },
+    summaryTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginBottom: 30,
+        textAlign: 'center',
+    },
+    scoreCard: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 20,
+        padding: 30,
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 30,
+        borderWidth: 1,
+        borderColor: '#eee',
+    },
+    scoreLabel: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 10,
+    },
+    scoreValue: {
+        fontSize: 60,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    scoreDetail: {
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 5,
+    },
+    scoreAttempts: {
+        fontSize: 14,
+        color: '#999',
+    },
+    summaryButtons: {
+        width: '100%',
+        gap: 15,
+    },
+    summaryButton: {
+        padding: 18,
+        borderRadius: 15,
+        alignItems: 'center',
+        width: '100%',
+    },
+    summaryButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    retryButtonStyle: {
+        backgroundColor: '#f0f0f0',
+    },
 });

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script de démarrage rapide BISApp
 
-echo "🚀 Démarrage BISApp - Tutoring Accessible"
+echo "Démarrage BISApp - Tutoring Accessible"
 echo "=========================================="
 echo ""
 
@@ -11,12 +11,12 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-echo "✅ Node.js détecté: $(node -v)"
-echo "✅ npm détecté: $(npm -v)"
+echo " Node.js détecté: $(node -v)"
+echo " npm détecté: $(npm -v)"
 echo ""
 
 # Démarrer le backend
-echo "📦 Démarrage du Backend..."
+echo " Démarrage du Backend..."
 echo "Assurez-vous que MongoDB est en cours d'exécution!"
 echo ""
 

@@ -141,13 +141,13 @@ backend/
 3. **Content**: Token vérifié → Récupération des données → Envoi au client
 4. **Admin**: Token vérifié + Vérification du rôle admin → Opération CRUD → Retour au client
 
-## 🛡️ Sécurité
+##  Sécurité
 
-- ✅ Mot de passe hashé avec bcryptjs
-- ✅ JWT pour l'authentification
-- ✅ CORS configuré
-- ✅ Validation des données côté serveur
-- ✅ Autorisation basée sur les rôles (RBAC)
+-  Mot de passe hashé avec bcryptjs
+- JWT pour l'authentification
+-  CORS configuré
+-  Validation des données côté serveur
+-  Autorisation basée sur les rôles (RBAC)
 
 ## 📝 Notes
 

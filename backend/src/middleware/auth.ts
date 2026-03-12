@@ -12,6 +12,9 @@ declare global {
   }
 }
 
+// Utiliser la même clé secrète que dans authController
+const JWT_SECRET = process.env.JWT_SECRET || 'braille-tutor-secret-key-2026';
+
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
@@ -21,7 +24,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as {
+    const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string;
       role: 'student' | 'admin';
     };

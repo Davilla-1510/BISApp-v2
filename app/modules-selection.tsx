@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -10,9 +11,10 @@ import {
     View,
     Platform
 } from 'react-native';
-import { useRouter } from 'expo-router'; // ✅ Migration Expo Router
-import { api } from '@/services/api'; // ✅ Utilisation de ton service API
-import * as Haptics from 'expo-haptics'; // ✅ Retour tactile
+import { useRouter } from 'expo-router';
+import { api } from '@/services/api';
+import * as Haptics from 'expo-haptics';
+import useContentCache from '@/hooks/useContentCache';
 
 interface Module {
   _id: string;
@@ -26,28 +28,68 @@ const ModulesSelectionScreen = () => {
   const router = useRouter();
   const [modules, setModules] = useState<Module[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Cache hook
+  const { getCache, setCache, CACHE_KEYS } = useContentCache();
+  
+  // Use ref to track if we've fetched
+  const hasFetchedRef = useRef(false);
 
-  useEffect(() => {
-    loadModules();
-  }, []);
-
-  const loadModules = async () => {
+  const loadModules = useCallback(async () => {
+    // Prevent multiple fetches
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    
     try {
       setIsLoading(true);
+      
+      // Try to get from cache first
+      const cachedModules = await getCache<Module[]>(CACHE_KEYS.MODULES);
+      if (cachedModules && cachedModules.length > 0) {
+        console.log('Using cached modules:', cachedModules.length);
+        setModules(cachedModules);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fetch from API if not in cache
       const response = await api.getModules();
-      setModules(response.modules || []);
+      console.log('Modules API Response:', response);
+      
+      // Extraire correctement les modules - l'API retourne { modules: [...] }
+      let modulesData: Module[] = [];
+      if (response && response.modules) {
+        modulesData = response.modules;
+      } else if (response && Array.isArray(response)) {
+        modulesData = response;
+      } else if (response && response.data && response.data.modules) {
+        modulesData = response.data.modules;
+      }
+      
+      console.log('Modules found:', modulesData.length);
+      setModules(modulesData);
+      
+      // Save to cache
+      await setCache(CACHE_KEYS.MODULES, modulesData);
     } catch (error: any) {
       Alert.alert('Erreur', 'Impossible de charger les modules');
       console.error('Erreur API Modules:', error);
+      setModules([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getCache, setCache, CACHE_KEYS]);
+
+  useEffect(() => {
+    if (!hasFetchedRef.current) {
+      loadModules();
+    }
+  }, [loadModules]);
 
   const handleModuleSelect = (module: Module) => {
-    Haptics.selectionAsync(); // Petit retour tactile
+    Haptics.selectionAsync();
     router.push({
-      pathname: '/levels-selection', // ✅ Doit correspondre à ton fichier app/levels-selection.tsx
+      pathname: '/levels-selection',
       params: { 
         moduleId: module._id,
         moduleTitle: module.title 
@@ -250,3 +292,4 @@ const styles = StyleSheet.create({
 });
 
 export default ModulesSelectionScreen;
+

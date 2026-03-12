@@ -59,7 +59,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await login(email, password); // Changez 'signIn' en 'login'
-      router.replace('/home');
+      router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert(
         'Erreur de connexion',

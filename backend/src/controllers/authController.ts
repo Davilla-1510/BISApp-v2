@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
@@ -7,11 +7,14 @@ interface AuthRequest extends Request {
   user?: { id: string; role: "student" | "admin" };
 }
 
+
+const JWT_SECRET = process.env.JWT_SECRET || 'braille-tutor-secret-key-2026';
+
 const generateToken = (userId: string, role: string): string => {
   return jwt.sign(
     { id: userId, role },
-    process.env.JWT_SECRET || 'your-secret-key',
-    { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRE || '30d' }
   );
 };
 
@@ -20,6 +23,9 @@ const formatUserResponse = (user: any) => ({
   firstName: user.firstName,
   lastName: user.lastName,
   email: user.email,
+  phoneNumber: user.phoneNumber,
+  profilePhoto: user.profilePhoto,
+  bio: user.bio,
   accessibilityLevel: user.accessibilityLevel,
   audioMode: user.audioMode,
   role: user.role,
@@ -44,15 +50,12 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Hash du password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Créer un nouvel utilisateur
+    // Créer l'utilisateur
     const user = await User.create({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password,
       accessibilityLevel: accessibilityLevel || 'no-visual-impairment',
       audioMode: audioMode || false,
       role: 'student',
@@ -175,15 +178,17 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user?.id) {
-      res.status(401).json({ message: 'Non authentifié' });
+      res.status(401).json({ message: 'Non authentifie' });
       return;
     }
 
-    const { audioMode, accessibilityLevel } = req.body;
+    const { audioMode, accessibilityLevel, profilePhoto, bio } = req.body;
     const updateData: Record<string, any> = {};
 
     if (audioMode !== undefined) updateData.audioMode = audioMode;
     if (accessibilityLevel !== undefined) updateData.accessibilityLevel = accessibilityLevel;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+    if (bio !== undefined) updateData.bio = bio;
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
@@ -192,7 +197,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     );
 
     if (!user) {
-      res.status(404).json({ message: 'Utilisateur non trouvé' });
+      res.status(404).json({ message: 'Utilisateur non trouve' });
       return;
     }
 
@@ -201,6 +206,6 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
     });
   } catch (error) {
     console.error('Erreur updateProfile:', error);
-    res.status(500).json({ message: 'Erreur lors de la mise à jour du profil' });
+    res.status(500).json({ message: 'Erreur lors de la mise a jour du profil' });
   }
 };

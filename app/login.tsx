@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router'; // ✅ Utilisation exclusive d'Expo Router
 import {
     ActivityIndicator,
@@ -15,16 +15,28 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import * as Haptics from 'expo-haptics'; // ✅ Ajout du retour haptique
+import useAccessibleTheme from '../hooks/useAccessibleTheme';
+import { useAutoTTS } from '../hooks/useTTS';
 
 const LoginScreen = () => {
   const router = useRouter();
   const { login } = useAuth();
+  
+  // Hooks d'accessibilité
+  const theme = useAccessibleTheme();
+  const { speak, announceWelcome, announceInstructions } = useAutoTTS();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Lecture automatique des instructions au chargement
+  useEffect(() => {
+    const instructions = "Page de connexion. Entrez votre email et mot de passe pour vous connecter.";
+    announceInstructions(instructions);
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -40,7 +52,7 @@ const LoginScreen = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
+const handleLogin = async () => {
     if (!validateForm()) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         return;
@@ -50,8 +62,8 @@ const LoginScreen = () => {
     try {
       await login(email, password);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // La redirection vers /home est généralement gérée par ton RootLayout 
-      // via l'état de l'utilisateur dans AuthContext.
+// Rediriger vers les onglets après la connexion
+      router.replace('/(tabs)');
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert('Erreur', error.message || 'Erreur lors de la connexion');
@@ -90,7 +102,7 @@ const LoginScreen = () => {
             <Text style={styles.label}>Adresse Email</Text>
             <TextInput
               style={[styles.input, errors.email && styles.inputError]}
-              placeholder="exemple@email.com"
+              placeholder="@email.com"
               placeholderTextColor="#9CA3AF"
               value={email}
               onChangeText={(text) => {
@@ -160,7 +172,7 @@ const LoginScreen = () => {
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>Pas encore de compte? </Text>
             <TouchableOpacity onPress={() => router.push('/signup')}>
-              <Text style={styles.signupLink}>S'inscrire</Text>
+              <Text style={styles.signupLink}>Rejoindre BISApp</Text>
             </TouchableOpacity>
           </View>
 
@@ -176,11 +188,12 @@ const LoginScreen = () => {
   );
 };
 
+// Styles statiques - l'accessibilité est gérée via TTS
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   logoSection: { alignItems: 'center', marginTop: 40, marginBottom: 30 },
   logo: {
-    width: 80, height: 80, borderRadius: 20, // Plus moderne que 40
+    width: 80, height: 80, borderRadius: 20,
     backgroundColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginBottom: 15,
     elevation: 4, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8
   },

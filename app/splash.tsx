@@ -4,7 +4,7 @@
 
 // Expérience Utilisateur (UX) : Il évite d'afficher un écran vide ou blanc pendant que React Native charge le bundle JavaScript. Il donne l'impression d'une application fluide et professionnelle.
 
-// Redirection logique : Comme on le voit dans ton code avec navigation.replace, ce fichier sert de "tour de contrôle" pour décider si l'utilisateur doit aller vers l'écran de Connexion (s'il n'est pas connecté) ou directement vers l'Accueil (s'il possède une session active).
+// Redirection logique : Comme on le voit dans le code avec navigation.replace, ce fichier sert de "tour de contrôle" pour décider si l'utilisateur doit aller vers l'écran de Connexion (s'il n'est pas connecté) ou directement vers l'Accueil (s'il possède une session active).
 
 import React, { useEffect, useRef } from 'react';
 import { Animated, SafeAreaView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
@@ -24,19 +24,30 @@ const SplashScreen = () => {
       useNativeDriver: true,
     }).start();
 
-    // 2. Logique de redirection après un court délai
+// 2. Logique de redirection - rediriger dès que l'auth est prête
     const timer = setTimeout(() => {
       if (!authLoading) {
         // Si l'auth a fini de vérifier le jeton
         if (user) {
-          router.replace('/home'); // Utilisateur connecté
+          router.replace('/(tabs)'); // Utilisateur connecté - va vers les onglets
         } else {
-          router.replace('/login'); // Utilisateur non connecté
+          router.replace('/visitor-welcome'); // Visiteur - page d'accueil avec question accessibilité
         }
       }
-    }, 2500);
+    }, 1000); // Réduit à 1 seconde
 
-    return () => clearTimeout(timer);
+    // Fallback: redirection forcée après 5 secondes si l'auth est toujours en cours
+    const fallbackTimer = setTimeout(() => {
+      if (authLoading) {
+        console.log('Auth timeout - redirecting to visitor-welcome');
+        router.replace('/visitor-welcome');
+      }
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+    };
   }, [authLoading, user]);
 
   return (
@@ -75,3 +86,4 @@ const styles = StyleSheet.create({
 });
 
 export default SplashScreen;
+

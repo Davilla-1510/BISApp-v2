@@ -32,7 +32,17 @@ export const getChaptersByLevel = async (req: Request, res: Response): Promise<v
   try {
     const { levelId } = req.params;
     const chapters = await Chapter.find({ level: levelId }).sort({ order: 1 });
-    res.status(200).json({ chapters });
+    
+    // Add lessonsCount to each chapter
+    const chaptersWithCount = await Promise.all(chapters.map(async (chapter) => {
+      const lessonsCount = await Lesson.countDocuments({ chapter: chapter._id });
+      return {
+        ...chapter.toObject(),
+        lessonsCount
+      };
+    }));
+    
+    res.status(200).json({ chapters: chaptersWithCount });
   } catch (error) {
     console.error('Erreur lors de la récupération des chapitres:', error);
     res.status(500).json({ message: 'Erreur lors de la récupération des chapitres' });

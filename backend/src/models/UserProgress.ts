@@ -2,11 +2,11 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUserProgress extends Document {
   user: mongoose.Types.ObjectId;
-  module: mongoose.Types.ObjectId;
-  level: mongoose.Types.ObjectId;
-  chapter: mongoose.Types.ObjectId;
-  lesson: mongoose.Types.ObjectId;
-  exercise: mongoose.Types.ObjectId;
+  module?: mongoose.Types.ObjectId;
+  level?: mongoose.Types.ObjectId;
+  chapter?: mongoose.Types.ObjectId;
+  lesson?: mongoose.Types.ObjectId;
+  exercise?: mongoose.Types.ObjectId;
   status: 'not-started' | 'in-progress' | 'completed' | 'passed';
   attempts: number;
   score?: number;
@@ -20,12 +20,12 @@ const UserProgressSchema = new Schema<IUserProgress>(
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      index: true
     },
     module: {
       type: Schema.Types.ObjectId,
-      ref: 'Module',
-      required: true
+      ref: 'Module'
     },
     level: {
       type: Schema.Types.ObjectId,
@@ -61,5 +61,11 @@ const UserProgressSchema = new Schema<IUserProgress>(
   },
   { timestamps: true }
 );
+
+// Index compound pour optimiser les requêtes
+UserProgressSchema.index({ user: 1, module: 1 });
+UserProgressSchema.index({ user: 1, level: 1 });
+UserProgressSchema.index({ user: 1, lesson: 1 });
+UserProgressSchema.index({ user: 1, exercise: 1 });
 
 export default mongoose.model<IUserProgress>('UserProgress', UserProgressSchema);

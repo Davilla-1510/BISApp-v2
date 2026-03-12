@@ -57,7 +57,15 @@ export default function QuizScreen() {
             setLoading(true);
             if (!levelId) throw new Error('ID du niveau manquant');
             const response = await api.getQuizByLevel(levelId);
-            setQuiz(response);
+            // L'API retourne { quiz: {...} } - extraire correctement
+            if (response && response.quiz) {
+                setQuiz(response.quiz);
+            } else if (response && response.data && response.data.quiz) {
+                setQuiz(response.data.quiz);
+            } else {
+                // Si c'est directement l'objet quiz
+                setQuiz(response);
+            }
         } catch (error: any) {
             Alert.alert('Erreur', 'Impossible de charger le quiz');
             router.back();
@@ -101,14 +109,23 @@ export default function QuizScreen() {
                 score: finalScore,
                 passed: finalScore >= (quiz.passingScore || 70),
             });
+if (finalScore >= (quiz.passingScore || 70)) {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Rediriger vers les chapitres si réussi
+    router.replace({
+        pathname: '/chapters-selection',
+        params: { 
+            levelId: levelId, 
+            levelTitle: quiz.title,  // Now defined via props
+            moduleId: quiz._id,
+            moduleTitle: quiz.title
+        }
+    });
+} else {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    setShowReview(true);
+}
 
-            if (finalScore >= (quiz.passingScore || 70)) {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            } else {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            }
-            
-            setShowReview(true);
         } catch (error) {
             Alert.alert('Erreur', 'Échec de la soumission');
         } finally {
@@ -130,6 +147,18 @@ export default function QuizScreen() {
     if (!quiz) return (
         <ThemedView style={styles.center}><ThemedText>Quiz introuvable</ThemedText></ThemedView>
     );
+
+    // Protection contre les quiz sans questions
+    if (!quiz.questions || quiz.questions.length === 0) {
+        return (
+            <ThemedView style={styles.center}>
+                <ThemedText>Aucune question disponible pour ce quiz</ThemedText>
+                <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
+                    <Text style={{ color: tintColor }}>Retour</Text>
+                </TouchableOpacity>
+            </ThemedView>
+        );
+    }
 
     const currentQuestion = quiz.questions[currentQuestionIndex];
     const isLastQuestion = currentQuestionIndex === quiz.questions.length - 1;

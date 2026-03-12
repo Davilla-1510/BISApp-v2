@@ -4,9 +4,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { api } from '@/services/api';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import * as Speech from 'expo-speech';
-import { useAudioPlayer } from 'expo-audio'; 
 import {
     ActivityIndicator,
     Alert,
@@ -31,7 +30,10 @@ interface Lesson {
 export default function LessonsScreen() {
   const router = useRouter();
   const { isAccessibleMode } = useAuth(); 
-  const { chapterId, chapterTitle } = useLocalSearchParams<{ chapterId: string; chapterTitle: string }>();
+  const params = useLocalSearchParams<{ chapterId: string; chapterTitle: string }>();
+  
+  const chapterId = params.chapterId || (params as any).chapterId;
+  const chapterTitle = params.chapterTitle || (params as any).chapterTitle || 'Leçons';
   
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,28 +41,62 @@ export default function LessonsScreen() {
   const [showLessonModal, setShowLessonModal] = useState(false);
   const tintColor = useThemeColor({}, 'tint');
 
-  // Gestion de l'audio avec le nouveau système expo-audio
-  const player = useAudioPlayer(selectedLesson?.audioUrl || '');
+  // Fonction pour lire le contenu en audio (utilise expo-speech par défaut)
+  const handlePlayAudio = () => {
+    if (selectedLesson?.audioUrl) {
+      // TODO: Implémenter la lecture audio avec expo-av
+      // Pour l'instant on utilise la synthèse vocale
+      Speech.speak(selectedLesson.content || "", { language: 'fr' });
+    } else {
+      Speech.speak(selectedLesson?.content || "", { language: 'fr' });
+    }
+  };
+
+  const fetchLessons = useCallback(async () => {
+    try {
+      setLoading(true);
+      if (!chapterId) {
+        console.warn('Chapter ID missing');
+        setLessons([]);
+        return;
+      }
+      
+      console.log('Fetching lessons for chapterId:', chapterId);
+      
+      const response = await api.getLessonsByChapter(chapterId);
+      console.log('API Response:', response);
+      
+      // L'API retourne { lessons: [...] } - extraire correctement
+      let lessonsData: Lesson[] = [];
+      if (response && response.lessons) {
+        lessonsData = response.lessons;
+      } else if (response && Array.isArray(response)) {
+        lessonsData = response;
+      } else if (response && response.data && response.data.lessons) {
+        lessonsData = response.data.lessons;
+      }
+      
+      console.log('Lessons found:', lessonsData.length);
+      
+      // Trier par ordre
+      const sortedLessons = lessonsData.sort((a: Lesson, b: Lesson) => a.order - b.order);
+      setLessons(sortedLessons);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || 'Impossible de charger les leçons';
+      Alert.alert('Erreur', errorMsg);
+      console.error('Fetch lessons error:', error);
+      setLessons([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [chapterId]);
 
   useEffect(() => {
     fetchLessons();
     if (isAccessibleMode && chapterTitle) {
       Speech.speak(`Chapitre : ${chapterTitle}. Voici la liste des leçons.`);
     }
-  }, [chapterId]);
-
-  const fetchLessons = async () => {
-    try {
-      setLoading(true);
-      if (!chapterId) throw new Error('ID du chapitre manquant');
-      const response = await api.getLessonsByChapter(chapterId);
-      setLessons(response || []);
-    } catch (error: any) {
-      Alert.alert('Erreur', 'Impossible de charger les leçons');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchLessons, isAccessibleMode, chapterTitle]);
 
   const handleLessonPress = (lesson: Lesson) => {
     setSelectedLesson(lesson);
@@ -70,18 +106,9 @@ export default function LessonsScreen() {
     }
   };
 
-  const handlePlayAudio = () => {
-    if (selectedLesson?.audioUrl) {
-      player.play();
-    } else {
-      Speech.speak(selectedLesson?.content || "", { language: 'fr' });
-    }
-  };
-
   const handleCloseModal = () => {
     setShowLessonModal(false);
     Speech.stop();
-    if (player) player.pause();
   };
 
   const handleGoToExercises = (lessonId: string, lessonTitle: string) => {
@@ -100,6 +127,9 @@ export default function LessonsScreen() {
     );
   }
 
+  // Trier les leçons pour l'affichage
+  const sortedLessons = [...lessons].sort((a, b) => a.order - b.order);
+
   return (
     <ThemedView style={styles.container}>
       {/* Header personnalisé */}
@@ -111,25 +141,32 @@ export default function LessonsScreen() {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {lessons.sort((a, b) => a.order - b.order).map((lesson) => (
-          <TouchableOpacity
-            key={lesson._id}
-            style={[styles.lessonCard, { borderLeftColor: tintColor }]}
-            onPress={() => handleLessonPress(lesson)}
-            accessibilityRole="button"
-            accessibilityLabel={`Leçon: ${lesson.title}`}
-          >
-            <View style={styles.lessonHeader}>
-              <ThemedText type="subtitle" style={styles.lessonTitle}>{lesson.title}</ThemedText>
-              {lesson.completed && (
-                <View style={[styles.completedBadge, { backgroundColor: tintColor }]}>
-                  <Text style={styles.badgeText}>✓</Text>
-                </View>
-              )}
-            </View>
-            <ThemedText numberOfLines={2} style={styles.lessonPreview}>{lesson.content}</ThemedText>
-          </TouchableOpacity>
-        ))}
+        {sortedLessons.length === 0 ? (
+          <View style={styles.emptyState}>
+            <ThemedText style={styles.emptyText}>Aucune leçon trouvée pour ce chapitre.</ThemedText>
+            <Text style={styles.debugText}>Chapter ID: {chapterId}</Text>
+          </View>
+        ) : (
+          sortedLessons.map((lesson) => (
+            <TouchableOpacity
+              key={lesson._id}
+              style={[styles.lessonCard, { borderLeftColor: tintColor }]}
+              onPress={() => handleLessonPress(lesson)}
+              accessibilityRole="button"
+              accessibilityLabel={`Leçon: ${lesson.title}`}
+            >
+              <View style={styles.lessonHeader}>
+                <ThemedText type="subtitle" style={styles.lessonTitle}>{lesson.title}</ThemedText>
+                {lesson.completed && (
+                  <View style={[styles.completedBadge, { backgroundColor: tintColor }]}>
+                    <Text style={styles.badgeText}>✓</Text>
+                  </View>
+                )}
+              </View>
+              <ThemedText numberOfLines={2} style={styles.lessonPreview}>{lesson.content}</ThemedText>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
       {/* Modal de Leçon */}
@@ -185,6 +222,9 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 24, fontWeight: '800' },
   content: { flex: 1 },
   contentContainer: { padding: 20 },
+  emptyState: { alignItems: 'center', marginTop: 50 },
+  emptyText: { color: '#999', fontSize: 16 },
+  debugText: { color: '#ccc', fontSize: 12, marginTop: 10 },
   lessonCard: { 
     backgroundColor: '#fff', 
     padding: 20, 

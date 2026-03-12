@@ -17,6 +17,7 @@ interface CreateModuleBody {
   description: string;
   icon: string;
 }
+
 export const createModule = async (req: Request<{}, {}, CreateModuleBody>, res: Response) => {
   try {
     const { name, title, description, icon } = req.body;

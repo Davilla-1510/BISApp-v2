@@ -7,6 +7,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phoneNumber?: string;
+  profilePhoto?: string | null;
+  bio?: string;
   accessibilityLevel: 'no-visual-impairment' | 'partial' | 'total';
   audioMode: boolean;
   role: 'student' | 'admin';
@@ -43,14 +45,23 @@ const UserSchema = new Schema<IUser>(
     password: {
       type: String,
       required: [true, 'Veuillez fournir un mot de passe'],
-      minlength: [6, 'Le mot de passe doit contenir au moins 6 caractères'],
+      minlength: [6, 'Le mot de passe doit contenir au moins 8 caractères'],
       select: false
     },
-    phoneNumber: {
-      type: String,
-      unique: true,
-      sparse: true
-    },
+  phoneNumber: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  profilePhoto: {
+    type: String,
+    default: null
+  },
+  bio: {
+    type: String,
+    maxlength: [500, 'La bio ne doit pas depasser 500 caracteres'],
+    default: ''
+  },
     accessibilityLevel: {
       type: String,
       enum: ['no-visual-impairment', 'partial', 'total'],

@@ -18,62 +18,40 @@ import {
 
 
 interface ModuleProgress {
-
   moduleId: string;
-
   moduleName: string;
-
   completionPercentage: number;
-
   chaptersCompleted: number;
-
   chaptersTotal: number;
-
   lessonsCompleted: number;
-
   lessonsTotal: number;
-
   exercisesCompleted: number;
-
   exercisesTotal: number;
-
 }
 
 
 interface LevelProgress {
-
   levelId: string;
-
   levelName: string;
-
   completed: boolean;
-
   quizPassed: boolean;
-
   quizScore?: number;
-
 }
 
 
 
 interface UserStats {
-
   totalLessonsCompleted: number;
-
   totalExercisesCompleted: number;
-
   totalQuizzesCompleted: number;
-
   averageScore: number;
-
   timeSpentHours: number;
-
 }
 
 export default function DashboardScreen() {
     const router = useRouter();
     const { user, logout } = useAuth();
-     const [moduleProgresses, setModuleProgresses] = useState<ModuleProgress[]>([]);
+    const [moduleProgresses, setModuleProgresses] = useState<ModuleProgress[]>([]);
     const [levelProgresses, setLevelProgresses] = useState<LevelProgress[]>([]);
     const [userStats, setUserStats] = useState<UserStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -123,8 +101,7 @@ export default function DashboardScreen() {
                 onPress: async () => {
                     try {
                         await logout();
-                        // ✅ Correction du chemin de navigation
-                        router.replace('/login'); 
+                        router.replace('/visitor-welcome'); 
                     } catch (error) {
                         Alert.alert('Erreur', 'Impossible de se déconnecter');
                     }
@@ -188,7 +165,11 @@ export default function DashboardScreen() {
                 
                 {moduleProgresses.length === 0 ? (
                     <View style={styles.emptyCard}>
-                        <ThemedText>Aucune activité récente. Commencez un module !</ThemedText>
+                        <ThemedText style={styles.emptyTitle}>🎯 Le module Braille est en cours d'exécution</ThemedText>
+                        <ThemedText style={styles.emptySubtext}>Commencez votre première leçon pour apprendre le Braille !</ThemedText>
+                        <ThemedText style={styles.emptySubtext}>
+                            Leçons: 0 • Exercices: 0 • Quiz: 0
+                        </ThemedText>
                     </View>
                 ) : (
                     moduleProgresses.map((module) => (
@@ -286,5 +267,9 @@ const styles = StyleSheet.create({
     progressFill: { height: '100%' },
     ctaButton: { padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
     ctaButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-    emptyCard: { padding: 20, alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 10 }
+    emptyCard: { padding: 20, alignItems: 'center', backgroundColor: '#f9f9f9', borderRadius: 10 },
+    emptyTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginTop: 8, textAlign: 'center' },
+    emptySubtext: { fontSize: 14, color: '#666', marginTop: 8, textAlign: 'center' }
 });
+
+

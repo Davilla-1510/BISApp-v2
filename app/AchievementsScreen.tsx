@@ -16,9 +16,10 @@ const AchievementsScreen = () => {
     try {
       setLoading(true);
       
-    const resAll = await api.getAllBadges();
-    const resUser = await api.getMyBadges();
-      setAllBadges(resAll.data.data || []); // On suppose que le format est { success: true, data: [...] }
+      // Use correct method names from api service
+      const resAll = await api.getBadges();
+      const resUser = await api.getUserBadges();
+      setAllBadges(resAll.data.data || []);
       setUserBadges(resUser.data.badges || []);
       
     } catch (error) {

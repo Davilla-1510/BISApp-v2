@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "VIBRATE",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +26,16 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.bisapp.brailletutor",
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "VIBRATE",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "static",
@@ -27,9 +43,11 @@
     },
     "plugins": [
       [
-    "@react-native-voice/voice",
-    { "microphonePermission": "L'application a besoin du micro pour l'assistant vocal." }
-  ],
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "L'application a besoin du micro pour l'assistant vocal."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -47,8 +65,7 @@
       "expo-audio"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }

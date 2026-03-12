@@ -1,3 +1,5 @@
+// Ce composant est un collapsible qui affiche un titre et peut être ouvert ou fermé pour révéler ou cacher son contenu. Il utilise des hooks pour gérer l'état d'ouverture et applique des styles pour l'apparence. Le composant est conçu pour être utilisé dans une application React Native avec un thème clair ou sombre.
+
 import { PropsWithChildren, useState } from 'react';
 import { StyleSheet, TouchableOpacity } from 'react-native';
 

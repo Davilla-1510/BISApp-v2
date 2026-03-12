@@ -1,7 +1,7 @@
 @echo off
 REM Script de démarrage rapide BISApp pour Windows
 
-echo 🚀 Demarrage BISApp - Tutoring Accessible
+echo  Demarrage BISApp - Tutoring Accessible
 echo ==========================================
 echo.
 
@@ -13,7 +13,7 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-echo ✅ Node.js detecte
+echo  Node.js detecte
 for /f "tokens=*" %%i in ('node -v') do echo %%i
 echo.
 

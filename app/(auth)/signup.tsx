@@ -44,7 +44,7 @@ export default function SignUpScreen() {
       });
       
       Alert.alert('Succès', 'Inscription réussie!');
-      router.replace('/home');
+      router.replace('/(tabs)');
     } catch (err: any) {
       Alert.alert('Erreur d\'inscription', err.message || 'Une erreur est survenue');
       console.error('Signup error:', err);

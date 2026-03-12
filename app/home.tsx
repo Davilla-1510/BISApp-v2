@@ -10,30 +10,48 @@ import {
     Platform
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'expo-router'; // ✅ Import de Expo Router
-import * as Haptics from 'expo-haptics'; // ✅ Pour le retour tactile
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { useAutoTTS } from '../hooks/useTTS';
 
 const HomeScreen = () => {
   const { user } = useAuth();
-  const router = useRouter(); // ✅ Utilisation du router
+  const router = useRouter();
+  
+  // Hook TTS pour l'accessibilité
+  const { announceWelcome, announceInstructions } = useAutoTTS();
 
+  // Annoncer le message de bienvenue au chargement
   useEffect(() => {
-    if (!user) {
-      router.replace('/login'); // ✅ Redirection vers la route login
+    if (user) {
+      const welcomeMessage = `Bienvenue ${user.firstName} sur BISApp. 
+        Vous avez 2 modules disponibles. 
+        Appuyez sur Commencer Maintenant pour démarrer votre apprentissage.`;
+      announceWelcome(user.firstName);
     }
   }, [user]);
 
   const handleStartNow = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    announceInstructions("Navigation vers la sélection des modules");
     router.push('/modules-selection');
   };
 
   const handleDashboard = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    announceInstructions("Navigation vers le tableau de bord");
     router.push('/dashboard');
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Chargement...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,9 +69,9 @@ const HomeScreen = () => {
 
         {/* Hero Section */}
         <ImageBackground
-          source={{ uri: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=400&h=200&auto=format&fit=crop' }}
+          source={require('../assets/images/Reading-Braille.webp')}
           style={styles.heroSection}
-          imageStyle={{ borderRadius: 16 }}
+          imageStyle={{ borderRadius: 2 }}
         >
           <View style={styles.heroOverlay}>
             <Text style={styles.heroTitle}>Apprenez le Braille</Text>
@@ -69,7 +87,7 @@ const HomeScreen = () => {
           accessibilityLabel="Commencer l'apprentissage maintenant"
           accessibilityHint="Navigue vers la sélection des modules"
         >
-          <Text style={styles.ctaButtonText}>🚀 Commencer Maintenant</Text>
+          <Text style={styles.ctaButtonText}>Commencer Maintenant</Text>
         </TouchableOpacity>
 
         {/* Quick Stats */}
@@ -149,7 +167,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 20,
     height: 180,
-    borderRadius: 16,
+    borderRadius: 6,
     overflow: 'hidden',
   },
   heroOverlay: {
@@ -171,7 +189,7 @@ const styles = StyleSheet.create({
   },
   ctaButton: {
     marginHorizontal: 20,
-    marginTop: -25, // Chevauchement stylé sur la hero section
+    marginTop: -25,
     marginBottom: 30,
     paddingVertical: 18,
     backgroundColor: '#6366F1',
@@ -265,6 +283,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: '#374151'
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB'
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6B7280'
   }
 });
 

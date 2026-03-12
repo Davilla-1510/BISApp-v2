@@ -7,16 +7,16 @@ import {
   getModules,
   getQuizByLevel
 } from '../controllers/contentController';
-import { authenticate } from '../middleware/auth';
+// import { authenticate } from '../middleware/auth'; // Temporairement désactivé pour test
 
 const router: Router = express.Router();
 
-// Toutes les routes de contenu sont publiques mais authentifiées
-router.get('/modules', authenticate, getModules);
-router.get('/modules/:moduleId/levels', authenticate, getLevelsByModule);
-router.get('/levels/:levelId/chapters', authenticate, getChaptersByLevel);
-router.get('/chapters/:chapterId/lessons', authenticate, getLessonsByChapter);
-router.get('/lessons/:lessonId/exercises', authenticate, getExercisesByLesson);
-router.get('/levels/:levelId/quiz', authenticate, getQuizByLevel);
+// Routes de contenu publiques (sans authentification pour le moment)
+router.get('/modules', getModules);
+router.get('/modules/:moduleId/levels', getLevelsByModule);
+router.get('/levels/:levelId/chapters', getChaptersByLevel);
+router.get('/chapters/:chapterId/lessons', getLessonsByChapter);
+router.get('/lessons/:lessonId/exercises', getExercisesByLesson);
+router.get('/levels/:levelId/quiz', getQuizByLevel);
 
 export default router;

@@ -26,8 +26,12 @@ export const validateSignup = (req: Request, res: Response, next: NextFunction):
     errors.push({ field: 'email', message: 'Email invalide' });
   }
 
-  if (!password || password.length < 6) {
+  if (!password) {
+    errors.push({ field: 'password', message: 'Le mot de passe est requis' });
+  } else if (password.length < 6) {
     errors.push({ field: 'password', message: 'Le mot de passe doit contenir au moins 6 caractères' });
+  } else if (!/(?=.*[A-Z])(?=.*\d)(?=.*[@$!#%*?&])[A-Za-z\d@$!#%*?&]{8,}/.test(password)) {
+    errors.push({ field: 'password', message: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial' });
   }
 
   if (password !== confirmPassword) {

@@ -1,67 +1,93 @@
-// import { useEffect } from 'react';
-// import { Stack } from 'expo-router';
-// import { StatusBar } from 'expo-status-bar';
-// import { AuthProvider } from './(auth)/context/AuthContext'; // Vérifiez que le chemin est correct selon votre structure
-// import { useFonts, Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
-// import * as SplashScreen from 'expo-splash-screen';
-
-// // Empêche l'écran de chargement de se fermer trop tôt
-// SplashScreen.preventAutoHideAsync();
-
-// export default function RootLayout() {
-//   const [loaded, error] = useFonts({
-//     Inter_400Regular,
-//     Inter_700Bold,
-//   });
-
-//   useEffect(() => {
-//     if (loaded || error) {
-//       SplashScreen.hideAsync();
-//     }
-//   }, [loaded, error]);
-
-//   if (!loaded && !error) {
-//     return null;
-//   }
-
-//   return (
-//     /* IMPORTANT : L'AuthProvider DOIT être le parent le plus haut 
-//        pour que useAuth() fonctionne dans TOUS les écrans (Login, Home, etc.)
-//     */
-   
-//     <AuthProvider>
-//       <Stack screenOptions={{ headerShown: false }}>
-//         {/* L'écran de connexion */}
-//         <Stack.Screen name="login" options={{ headerShown: false }} />
-        
-//         {/* Les autres groupes d'écrans (app) */}
-//         <Stack.Screen name="(app)" options={{ headerShown: false }} />
-        
-//         {/* Les écrans d'authentification */}
-//         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-//       </Stack>
-//       <StatusBar style="auto" />
-//     </AuthProvider>
-//   );
-// }
-
-
-import { Stack } from 'expo-router';
-import { AuthProvider } from '@/context/AuthContext';
+import { useEffect } from 'react';
+import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { AuthProvider, useAuth } from 'context/AuthContext';
+import { AccessibilityProvider } from 'context/AccessibilityContext';
+import { useFonts, Inter_400Regular, Inter_700Bold } from '@expo-google-fonts/inter';
+import * as SplashScreen from 'expo-splash-screen';
 import VoiceAssistant from '@/components/voice';
-import { useAudioPlayer } from "expo-audio";
+import AccessibilityMenu from '@/components/AccessibilityMenu';
+
+// Empêche l'écran de chargement de se fermer trop tôt
+SplashScreen.preventAutoHideAsync();
+
+function RootLayoutContent() {
+  const router = useRouter();
+  const { isLoading: authLoading, user } = useAuth();
+
+  // Gestion de la redirection automatique après authentification
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Vérifier si on n'est pas déjà sur une route publique
+      const publicRoutes = ['/splash', '/visitor-welcome', '/login', '/signup', '/about'];
+      // Cette logique est gérée par splash.tsx directement
+    }
+  }, [authLoading, user]);
+
+  return (
+    <>
+      <VoiceAssistant />
+      <AccessibilityMenu />
+      
+      <Stack 
+        screenOptions={{ 
+          headerShown: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        {/* Écrans publics - sans authentification requise */}
+        <Stack.Screen name="splash" options={{ animation: 'fade' }} />
+        <Stack.Screen name="visitor-welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="about" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="signup" />
+        
+        {/* Tab Navigator - principale après connexion */}
+        <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
+        
+        {/* Écrans de navigation principale */}
+        <Stack.Screen name="dashboard" />
+        <Stack.Screen name="modules-selection" />
+        
+        {/* Navigation pédagogique */}
+        <Stack.Screen name="levels-selection" />
+        <Stack.Screen name="chapters-selection" />
+        <Stack.Screen name="lessons" />
+        <Stack.Screen name="exercise" />
+        <Stack.Screen name="quiz" />
+        
+        {/* Groupe (app) - écrans tutoriels */}
+        <Stack.Screen name="(app)" options={{ animation: 'slide_from_bottom' }} />
+        
+        {/* Écrans admin */}
+        <Stack.Screen name="admin" />
+      </Stack>
+      <StatusBar style="auto" />
+    </>
+  );
+}
+
 export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    Inter_400Regular,
+    Inter_700Bold,
+  });
+
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
+    return null;
+  }
+
   return (
     <AuthProvider>
-      {/* L'assistant est un composant "frère" du Stack, pas un parent */}
-      <VoiceAssistant /> 
-      
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* Tous ces écrans ont accès à AuthProvider et VoiceAssistant tournera en fond */}
-        <Stack.Screen name="index" /> 
-        <Stack.Screen name="login" /> 
-        <Stack.Screen name="(app)" />
-      </Stack>
+      <AccessibilityProvider>
+        <RootLayoutContent />
+      </AccessibilityProvider>
     </AuthProvider>
   );
 }

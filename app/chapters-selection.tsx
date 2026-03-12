@@ -13,7 +13,7 @@ import {
     Text,
     TouchableOpacity,
     View,
-    RefreshControl // ✅ Ajouté pour permettre de rafraîchir la liste
+    RefreshControl
 } from 'react-native';
 
 interface Chapter {
@@ -25,31 +25,54 @@ interface Chapter {
 }
 
 export default function ChaptersSelectionScreen() {
+  // router permet de 
   const router = useRouter();
   const { user } = useAuth();
-  const { levelId, levelName } = useLocalSearchParams<{ levelId: string; levelName: string }>();
+  const params = useLocalSearchParams<{ levelId: string; levelTitle: string }>();
+  
+  // Support both levelName and levelTitle for compatibility
+  const levelId = params.levelId || (params as any).levelId;
+  const levelName = params.levelTitle || (params as any).levelTitle || (params as any).levelName || 'Chapitres';
   
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false); // ✅ État pour le "Pull to refresh"
+  const [refreshing, setRefreshing] = useState(false);
   const tintColor = useThemeColor({}, 'tint');
 
-  // ✅ Utilisation de useCallback pour éviter les re-renders inutiles
   const fetchChapters = useCallback(async (isRefresh = false) => {
     try {
       if (!isRefresh) setLoading(true);
       if (!levelId) {
         console.warn('Level ID missing');
+        setChapters([]);
         return;
       }
+      
+      console.log('Fetching chapters for levelId:', levelId);
+      
       const response = await api.getChaptersByLevel(levelId);
-      // ✅ Tri des chapitres directement à la réception
-      const sortedChapters = (response || []).sort((a: Chapter, b: Chapter) => a.order - b.order);
+      console.log('API Response:', response);
+      
+      // L'API retourne { chapters: [...] } - extraire correctement
+      let chaptersData: Chapter[] = [];
+      if (response && response.chapters) {
+        chaptersData = response.chapters;
+      } else if (response && Array.isArray(response)) {
+        chaptersData = response;
+      } else if (response && response.data && response.data.chapters) {
+        chaptersData = response.data.chapters;
+      }
+      
+      console.log('Chapters found:', chaptersData.length);
+      
+      // Trier par ordre
+      const sortedChapters = chaptersData.sort((a: Chapter, b: Chapter) => a.order - b.order);
       setChapters(sortedChapters);
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Impossible de charger les chapitres';
       Alert.alert('Erreur', errorMsg);
       console.error('Fetch chapters error:', error);
+      setChapters([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,10 +90,11 @@ export default function ChaptersSelectionScreen() {
 
   const handleChapterSelect = (chapterId: string, chapterTitle: string) => {
     router.push({
-      pathname: '/lessons', // ✅ Assure-toi que le fichier est bien app/lessons.tsx ou app/lessons/index.tsx
+      pathname: '/lessons',
       params: {
         chapterId,
         chapterTitle,
+        levelId,
         levelName,
       },
     });
@@ -97,7 +121,7 @@ export default function ChaptersSelectionScreen() {
           <Text style={[styles.backButton, { color: tintColor }]}>← Retour</Text>
         </TouchableOpacity>
         <ThemedText type="title" style={styles.headerTitle}>
-          {levelName || 'Chapitres'}
+          {levelName}
         </ThemedText>
       </View>
 
@@ -112,6 +136,7 @@ export default function ChaptersSelectionScreen() {
         {chapters.length === 0 ? (
           <View style={styles.emptyState}>
             <ThemedText style={styles.emptyText}>Aucun chapitre trouvé pour ce niveau.</ThemedText>
+            <Text style={styles.debugText}>Level ID: {levelId}</Text>
             <TouchableOpacity onPress={() => fetchChapters()} style={styles.retryButton}>
                 <Text style={{color: tintColor}}>Réessayer</Text>
             </TouchableOpacity>
@@ -154,7 +179,7 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 50, // ✅ Ajusté pour éviter l'encoche (Notch)
+    paddingTop: 50,
     paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
@@ -169,12 +194,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderLeftWidth: 5,
-    // Ombre pour iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // Ombre pour Android
     elevation: 3,
   },
   chapterHeader: {
@@ -191,5 +214,6 @@ const styles = StyleSheet.create({
   arrow: { position: 'absolute', right: 15, bottom: 15, fontSize: 24 },
   emptyState: { alignItems: 'center', marginTop: 50 },
   emptyText: { color: '#999', fontSize: 16 },
+  debugText: { color: '#ccc', fontSize: 12, marginTop: 10 },
   retryButton: { marginTop: 15, padding: 10 }
 });
