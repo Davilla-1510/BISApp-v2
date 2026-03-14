@@ -10,7 +10,9 @@
     "test": "jest",
     "seed": "ts-node src/script/seedData.ts",
     "create-admin": "ts-node src/script/createAdmin.ts",
-    "create-admin-simple": "ts-node src/script/createAdminSimple.ts"
+    "create-admin-simple": "ts-node src/script/createAdminSimple.ts",
+    "install-and-build": "npm install && npm run build",
+    "install-and-start": "npm install && npm run start"
   },
   "engines": {
     "node": ">=22.17.0"
