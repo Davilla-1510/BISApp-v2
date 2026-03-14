@@ -4,19 +4,11 @@
     "slug": "BISApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo BISApp.jpeg",
+    "icon": "./assets/images/favicon.png",
     "scheme": "brailletutorapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
-      "permissions": [
-        "INTERNET",
-        "ACCESS_NETWORK_STATE",
-        "VIBRATE",
-        "RECORD_AUDIO",
-        "MODIFY_AUDIO_SETTINGS"
-      ]
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -25,10 +17,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.bisapp.brailletutor",
-      "usesCleartextTraffic": true,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
