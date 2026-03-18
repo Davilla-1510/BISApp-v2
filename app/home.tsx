@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAutoTTS } from '../hooks/useTTS';
+import { AccessibilityInfo } from 'react-native';
 
 const HomeScreen = () => {
   const { user } = useAuth();
@@ -69,9 +70,10 @@ const HomeScreen = () => {
 
         {/* Hero Section */}
         <ImageBackground
-          source={require('../assets/images/Reading-Braille.webp')}
+          source={require('../assets/images/Reading-Braille.png')}
           style={styles.heroSection}
-          imageStyle={{ borderRadius: 2 }}
+          imageStyle={{ borderRadius: 2 }
+        }
         >
           <View style={styles.heroOverlay}>
             <Text style={styles.heroTitle}>Apprenez le Braille</Text>

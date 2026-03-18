@@ -5,7 +5,7 @@ import axios, { AxiosInstance } from 'axios';
 // Pour mobile: adresse IP locale
 const isWeb = typeof window !== 'undefined' && typeof navigator !== 'undefined';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || (isWeb ? 'http://localhost:3000/api' : 'http://192.168.56.1:3000/api');
+const API_BASE_URL = 'https://bisapp-backend.onrender.com/api';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -13,7 +13,7 @@ class ApiClient {
   constructor() {
     this.client = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 15000,
+      timeout: 30000,
       headers: {
         'Content-Type': 'application/json'
       }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  ImageBackground,
   Animated,
   Dimensions,
   SafeAreaView,
@@ -88,12 +89,18 @@ const VisitorWelcomeScreen = () => {
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         
         {/* Logo */}
+        <ImageBackground
+        source={require('../assets/images/logo BISApp.jpeg')}
+        style={styles.logo}
+        />
+          
+{/*        
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
             <Text style={styles.logoText}>BIS</Text>
           </View>
           <Text style={styles.appName}>BISApp</Text>
-        </View>
+        </View> */}
 
         {/* Question principale */}
         <View style={styles.questionContainer}>

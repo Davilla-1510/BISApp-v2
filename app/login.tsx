@@ -17,6 +17,8 @@ import { useAuth } from '../context/AuthContext';
 import * as Haptics from 'expo-haptics'; // ✅ Ajout du retour haptique
 import useAccessibleTheme from '../hooks/useAccessibleTheme';
 import { useAutoTTS } from '../hooks/useTTS';
+import { AccessibleTextInput } from '../components/AccessibleTextInput';
+import { AccessiblePasswordInput } from '../components/AccessiblePasswordInput';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -99,49 +101,36 @@ const handleLogin = async () => {
 
           {/* Email Input */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Adresse Email</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
+            <AccessibleTextInput
+              label="Adresse Email"
               placeholder="@email.com"
-              placeholderTextColor="#9CA3AF"
               value={email}
               onChangeText={(text) => {
                 setEmail(text);
                 if (errors.email) setErrors({ ...errors, email: '' });
               }}
               keyboardType="email-address"
-              autoCapitalize="none"
               editable={!isLoading}
               accessibilityLabel="Champ de saisie de l'adresse email"
+              error={!!errors.email}
+              speakLabel={true}
             />
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
           </View>
 
           {/* Password Input */}
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Mot de Passe</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, styles.passwordInput, errors.password && styles.inputError]}
-                placeholder="••••••••"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (errors.password) setErrors({ ...errors, password: '' });
-                }}
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-                accessibilityLabel="Champ de saisie du mot de passe"
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                accessibilityLabel={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-              >
-                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-              </TouchableOpacity>
-            </View>
+            <AccessiblePasswordInput
+              label="Mot de Passe"
+              placeholder="••••••••"
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (errors.password) setErrors({ ...errors, password: '' });
+              }}
+              accessibilityLabel="Champ de saisie du mot de passe"
+              error={!!errors.password}
+            />
             {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
           </View>
 

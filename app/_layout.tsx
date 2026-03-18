@@ -38,6 +38,7 @@ function RootLayoutContent() {
         {/* Écrans publics - sans authentification requise */}
         <Stack.Screen name="splash" options={{ animation: 'fade' }} />
         <Stack.Screen name="visitor-welcome" options={{ animation: 'fade' }} />
+        <Stack.Screen name="offervisitor" options={{ animation: 'fade' }} />
         <Stack.Screen name="about" />
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />

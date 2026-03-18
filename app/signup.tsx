@@ -15,6 +15,8 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useAutoTTS } from "../hooks/useTTS";
+import { AccessibleTextInput } from "../components/AccessibleTextInput";
+import { AccessiblePasswordInput } from "../components/AccessiblePasswordInput";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface AccessibilityOption {
@@ -177,26 +179,28 @@ const SignupScreen = () => {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Identité</Text>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Prénom</Text>
-        <TextInput
-          style={[styles.input, !!errors.firstName && styles.inputError]}
+        <AccessibleTextInput
+          label="Prénom"
           value={formData.firstName}
           onChangeText={(t) => setFormData({ ...formData, firstName: t })}
           placeholder="Ex: Jean"
           accessibilityLabel="Champ prénom"
+          error={!!errors.firstName}
+          speakLabel={true}
         />
         {!!errors.firstName && (
           <Text style={styles.errorText}>{errors.firstName}</Text>
         )}
       </View>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Nom</Text>
-        <TextInput
-          style={[styles.input, !!errors.lastName && styles.inputError]}
+        <AccessibleTextInput
+          label="Nom"
           value={formData.lastName}
           onChangeText={(t) => setFormData({ ...formData, lastName: t })}
           placeholder="Ex: Dupont"
           accessibilityLabel="Champ nom"
+          error={!!errors.lastName}
+          speakLabel={true}
         />
         {!!errors.lastName && (
           <Text style={styles.errorText}>{errors.lastName}</Text>
@@ -209,15 +213,15 @@ const SignupScreen = () => {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Contact</Text>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Adresse Email</Text>
-        <TextInput
-          style={[styles.input, !!errors.email && styles.inputError]}
+        <AccessibleTextInput
+          label="Adresse Email"
           value={formData.email}
           onChangeText={(t) => setFormData({ ...formData, email: t })}
           keyboardType="email-address"
-          autoCapitalize="none"
           placeholder="cjarc@email.com"
           accessibilityLabel="Champ email"
+          error={!!errors.email}
+          speakLabel={true}
         />
         {!!errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
       </View>
@@ -228,58 +232,30 @@ const SignupScreen = () => {
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Sécurité</Text>
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Mot de Passe</Text>
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            style={[
-              styles.input,
-              styles.passwordInput,
-              !!errors.password && styles.inputError,
-            ]}
-            secureTextEntry={!showPassword}
-            value={formData.password}
-            placeholder="••••••••••••••"
-            onChangeText={(t) => setFormData({ ...formData, password: t })}
-            accessibilityLabel="Champ mot de passe"
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
-            accessibilityLabel={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
-          >
-            <Text>{showPassword ? "👁️" : "🙈"}</Text>
-          </TouchableOpacity>
-        </View>
+        <AccessiblePasswordInput
+          label="Mot de Passe"
+          value={formData.password}
+          onChangeText={(t) => setFormData({ ...formData, password: t })}
+          placeholder="••••••••••••••"
+          accessibilityLabel="Champ mot de passe"
+          error={!!errors.password}
+        />
         {!!errors.password && (
           <Text style={styles.errorText}>{errors.password}</Text>
         )}
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Confirmer le mot de passe</Text>
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            style={[
-              styles.input,
-              styles.passwordInput,
-              !!errors.confirmPassword && styles.inputError,
-            ]}
-            secureTextEntry={!showConfirmPassword}
-            value={formData.confirmPassword}
-            placeholder="••••••••••••••"
-            onChangeText={(t) =>
-              setFormData({ ...formData, confirmPassword: t })
-            }
-            accessibilityLabel="Champ confirmation mot de passe"
-          />
-          <TouchableOpacity
-            style={styles.eyeIcon}
-            onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            accessibilityLabel={showConfirmPassword ? "Masquer" : "Afficher"}
-          >
-            <Text>{showConfirmPassword ? "👁️" : "🙈"}</Text>
-          </TouchableOpacity>
-        </View>
+        <AccessiblePasswordInput
+          label="Confirmer le mot de passe"
+          value={formData.confirmPassword}
+          onChangeText={(t) =>
+            setFormData({ ...formData, confirmPassword: t })
+          }
+          placeholder="••••••••••••••"
+          accessibilityLabel="Champ confirmation mot de passe"
+          error={!!errors.confirmPassword}
+        />
         {!!errors.confirmPassword && (
           <Text style={styles.errorText}>{errors.confirmPassword}</Text>
         )}

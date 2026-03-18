@@ -1,4 +1,8 @@
-# Architecture BISApp - Application de Tutorat Braille
+ca sur git hubtout er # Architecture BISApp - Application de Tutorat Braille (Révisée)
+
+## 1. Vue d'Ensemble
+
+ssu# Architecture BISApp - Application de Tutorat Braille
 
 ## 1. Vue d'Ensemble
 
@@ -33,32 +37,31 @@ BISApp est une application mobile React Native/Expo destinee a l'apprentissage a
 
 ## 2. Stack Technique
 
-### 2.1 Frontend
+### 2.1 Frontend (Actualisé 2025)
 
-| Technologie         | Version | Description              |
-| ------------------- | ------- | ------------------------ |
-| Expo SDK            | 54.x    | Framework React Native   |
-| React Native        | 0.81.x  | Core mobile              |
-| TypeScript          | 5.9.x   | Typage statique          |
-| Expo Router         | 6.x     | Navigation fichier-based |
-| expo-speech         | 14.x    | Synthese vocale (TTS)    |
-| expo-haptics        | 15.x    | Retour haptique          |
-| @react-native-voice | 3.x     | Reconnaissance vocale    |
-| Axios               | 1.x     | Client HTTP              |
-| AsyncStorage        | 2.x     | Stockage local           |
+| Technologie            | Version  | Rôle                                    |
+| ---------------------- | -------- | ---------------------------------------- |
 
-### 2.2 Backend
+| React Native           | 0.74.x   | UI native                                |
+| TypeScript             | ^5.6.0   | Typage end-to-end                        |
+| Expo Router            | ~3.5.0   | Navigation type-safe                     |
+| Reanimated             | ~3.10.0  | Animations fluides                       |
+| expo-speech            | ~13.0.0  | TTS multilingue (fr/en)                  |
+| expo-av                | ~15.0.0  | Audio feedback                           |
+| NativeWind (Tailwind)  | ^4.0.1   | Styling responsive                       |
+| Zustand                | ^4.5.0   | State management                         |
+### 2.2 Backend (Node.js API)
 
-| Technologie | Version | Description               |
-| ----------- | ------- | ------------------------- |
-| Node.js     | 20.x    | Runtime JavaScript        |
-| Express     | 4.x     | Framework web             |
-| MongoDB     | -       | Base de donnees           |
-| Mongoose    | 8.x     | ODM MongoDB               |
-| JWT         | 8.x     | Authentification          |
-| bcryptjs    | 2.x     | Chiffrement mots de passe |
-| TypeScript  | 5.x     | Typage                    |
 
+| ----------- | ------- | -------------------------------- |
+| Node.js     | 22.x    | Runtime serverless               |
+| Express     | ^4.19.0 | API REST scalable                |
+| MongoDB     | Atlas   | Database cloud scalable          |
+| Mongoose    | ^8.5.0  | ODM avec validation              |
+| jsonwebtoken| ^9.0.0  | JWT auth sécurisé                |
+| bcryptjs    | ^2.4.3  | Hashing sécurisé                 |
+| cors        | ^2.8.5  | CORS management                  |
+| helmet      | ^7.1.0  | Sécurité headers                 |
 ---
 
 ## 3. Structure du Projet

@@ -54,7 +54,7 @@ const seedDatabase = async () => {
       name: 'braille',
       title: 'Alphabet Braille',
       description: 'Apprenez le système Braille de A à Z, des lettres de base aux signes de ponctuation.',
-      icon: 'book-blind'
+      icon: '📚book-blind'
     });
 
     // Module 2: Informatique
@@ -62,10 +62,10 @@ const seedDatabase = async () => {
       name: 'informatique',
       title: 'Informatique',
       description: 'Initiez-vous à l\'informatique et aux technologies assistées pour personnes malvoyantes.',
-      icon: 'laptop'
+      icon: '💻laptop'
     });
 
-    console.log('✅ Modules créés:', moduleBraille.title, '&', moduleInformatique.title);
+    console.log('Modules créés:', moduleBraille.title, '&', moduleInformatique.title);
 
     // ============================================
     // 4. CRÉATION DES NIVEAUX - MODULE BRAILLE
@@ -102,7 +102,7 @@ const seedDatabase = async () => {
     // ============================================
     // 5. CRÉATION DES NIVEAUX - MODULE INFORMATIQUE
     // ============================================
-    console.log('💻 Création des niveaux Informatique...');
+    console.log('💻Création des niveaux Informatique...');
 
     const infoBasique = await Level.create({
       module: moduleInformatique._id,

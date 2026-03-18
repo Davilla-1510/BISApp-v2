@@ -90,6 +90,16 @@ const AboutScreen = () => {
                 </View>
               ))}
             </View>
+            {/* Bouton guide accessibilité */}
+            <TouchableOpacity
+              style={styles.guideButton}
+              onPress={() => router.push('/offervisitor')}
+              activeOpacity={0.8}
+              accessibilityLabel="Consulter le guide d'accessibilité numérique"
+              accessibilityHint="Navigue vers le document PDF"
+            >
+              <Text style={styles.guideButtonText}>📖 Guide Accessibilité Numérique</Text>
+            </TouchableOpacity>
 
             {/* Target Audience */}
             <View style={styles.targetSection}>
@@ -149,7 +159,28 @@ const AboutScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+  guideButton: {
+    backgroundColor: '#6366F1',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  guideButtonText: {
+    color: 'black',
+    fontSize: 16,
+    fontWeight: 'bold',
+   
+  },
+  OfferSection : {
+     margin:0, 
+  },
+  OfferTitle:{
+    fontSize:20,
+    fontWeight:'bold',
   },
   scrollContent: {
     flexGrow: 1,

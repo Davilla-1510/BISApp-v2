@@ -4,7 +4,7 @@
     "slug": "BISApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/favicon.png",
+    "icon": "./assets/images/logo Bisapp.png",
     "scheme": "brailletutorapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -24,12 +24,14 @@
         "ACCESS_NETWORK_STATE",
         "VIBRATE",
         "RECORD_AUDIO",
-        "MODIFY_AUDIO_SETTINGS"
+        "MODIFY_AUDIO_SETTINGS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo Bisapp.png"
     },
     "plugins": [
       [
@@ -56,6 +58,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "69efe7f2-a992-404f-86b1-760dc24af6d7"
+      }
     }
   }
 }

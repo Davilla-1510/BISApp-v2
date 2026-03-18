@@ -6,7 +6,7 @@ import React, { createContext, ReactNode, useContext, useEffect, useState, useCa
 // Pour mobile: adresse IP locale
 const isWeb = typeof window !== 'undefined' && typeof navigator !== 'undefined';
 
-const API_URL = process.env.REACT_APP_API_URL || (isWeb ? 'http://localhost:3000/api' : 'http://192.168.56.1:3000/api');
+const API_URL = 'https://bisapp-backend.onrender.com/api';
 
 export interface User {
   id: string;
