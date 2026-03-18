@@ -7,7 +7,7 @@
 // Redirection logique : Comme on le voit dans le code avec navigation.replace, ce fichier sert de "tour de contrôle" pour décider si l'utilisateur doit aller vers l'écran de Connexion (s'il n'est pas connecté) ou directement vers l'Accueil (s'il possède une session active).
 
 import React, { useEffect, useRef } from 'react';
-import {ImageBackground, Animated, SafeAreaView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { Animated, SafeAreaView, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext'; // On utilise ton contexte
 
@@ -53,14 +53,9 @@ const SplashScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <ImageBackground
-        source={require('../assets/images/logo BISApp.jpeg')}
-        style={styles.logo}
-        />
-
-        {/* <View style={styles.logo}>
+        <View style={styles.logo}>
           <Text style={styles.logoText}>BIS</Text>
-        </View> */}
+        </View>
         <Text style={styles.title}>BISApp</Text>
         <Text style={styles.subtitle}>
           Apprendre le Braille et l'Informatique Accessible
@@ -79,7 +74,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' },
   content: { alignItems: 'center' },
   logo: {
-    width: 100, height: 100, borderRadius: 50, backgroundColor: '#6366F1',
+    width: 100, height: 100, borderRadius: 25, backgroundColor: '#6366F1',
     justifyContent: 'center', alignItems: 'center', marginBottom: 20,
     shadowColor: '#6366F1', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 8
   },

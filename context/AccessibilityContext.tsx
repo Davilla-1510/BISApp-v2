@@ -41,33 +41,11 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isVisuallyImpaired) {
       // Automatically enable TTS and STT for visually impaired users
-      const newSettings = { 
-        textToSpeech: true, 
-        speechToText: true,
-        highContrast: true,
-        fontSize: 'large' as const
-      };
+      const newSettings = { textToSpeech: true, speechToText: true };
       setSettings(prev => ({ ...prev, ...newSettings }));
-      
-      // Announce that accessibility is enabled
-      try {
-        import('expo-speech').then(Speech => {
-          Speech.speak('Accessibilité activée. Le mode lecteur mains-libres est maintenant active.', {
-            language: 'fr-FR',
-            pitch: 1.0,
-            rate: 1.0,
-          });
-        });
-      } catch (err) {
-        console.warn('Erreur activation TTS:', err);
-      }
     } else {
       // Disable TTS and STT for non-visually impaired users
-      const newSettings = { 
-        textToSpeech: false, 
-        speechToText: false,
-        fontSize: 'medium' as const
-      };
+      const newSettings = { textToSpeech: false, speechToText: false };
       setSettings(prev => ({ ...prev, ...newSettings }));
     }
   }, [isVisuallyImpaired]);

@@ -18,7 +18,8 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // ========== MIDDLEWARE ==========
 app.use(express.json({ limit: '50mb' }));
-
++
++
 // CORS - configuré pour accepter toutes les origines en développement
 app.use(
   cors({
